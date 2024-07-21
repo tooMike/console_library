@@ -1,14 +1,18 @@
 import json
 import uuid
 
+from constants import BookStatus
+
 
 class Book:
+    """Класс книг."""
+
     def __init__(
             self,
             title: str,
             author: str,
             year: int,
-            status: str = "в наличии",
+            status: str = "В наличии",
             book_id: str | None = None
     ):
         self.title = title
@@ -29,53 +33,65 @@ class Book:
 
 
 class Library:
+    """Класс библиотеки для хранения и обработки книг."""
+
     def __init__(self, filepath='library.json'):
         self.filepath = filepath
         self.books = self.load_books()
 
-    def load_books(self) -> list[Book]:
+    def load_books(self) -> dict[str: Book]:
+        """
+        Загрузка книг из файла. Храним данные в виде словаря, где ключами
+        являются book_id. Это нужно для быстрого поиска книг по book_id.
+        """
         try:
             with open(self.filepath, 'r') as file:
                 books_data = json.load(file)
-                return [Book(**book) for book in books_data]
+                return {book['book_id']: Book(**book) for book in books_data}
         except (FileNotFoundError, json.JSONDecodeError):
-            return []
+            return {}
 
-    def save_books(self):
+    def save_books(self) -> None:
         """Сохранение книг в файл в формате json."""
         with open(self.filepath, 'w') as file:
             json.dump(
-                [book.to_dict() for book in self.books],
+                [book.to_dict() for book in self.books.values()],
                 file,
                 ensure_ascii=False,
                 indent=4
             )
 
-    def add_book(self, title, author, year):
+    def add_book(self, title: str, author: str, year: int) -> None:
         """Добавление книги."""
-        new_book = Book(title=title, author=author, year=year)
-        self.books.append(new_book)
+        new_book: Book = Book(title=title, author=author, year=year)
+        self.books[new_book.book_id] = new_book
         self.save_books()
 
-    def remove_book(self, book_id):
+    def remove_book(self, book_id) -> None:
         """Удаление книги."""
-        self.books = [book for book in self.books if book.book_id != book_id]
+        self.books.pop(book_id)
         self.save_books()
 
     def find_books(self, search_query: str) -> list[Book]:
         """Поиск книги по автору, названию или году."""
-        found_books = [book for book in self.books if
+        found_books = [book for book in self.books.values() if
                        search_query.lower() in book.title.lower() or
                        search_query.lower() in book.author.lower() or
                        search_query == str(book.year)]
         return found_books
 
     def list_books(self) -> list[Book]:
-        """Получение списка всех книг"""
-        return self.books
+        """Получение списка всех книг."""
+        return list(self.books.values())
 
-    def update_status(self, book_id, status):
+    def list_books_id(self) -> list[str]:
+        """Получение списка ID всех книг."""
+        return list(self.books.keys())
+
+    def update_status(self, book_id: str, status: BookStatus) -> None:
         """Изменение статуса книги."""
-        for book in self.books:
-            if book.book_id == book_id:
-                book.status = status
+        if book_id in self.books:
+            new_status: str = "Выдана" if status == BookStatus.ISSUED \
+                else "В наличии"
+            self.books[book_id].status = new_status
+        self.save_books()

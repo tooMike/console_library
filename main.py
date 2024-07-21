@@ -1,5 +1,7 @@
-from constants import Command
-from models import Library
+from typing import List
+
+from constants import BookStatus, Command
+from models import Book, Library
 
 
 def main():
@@ -10,36 +12,66 @@ def main():
         command_input = input("Введите номер команды: ").strip()
 
         try:
-            command = Command(int(command_input))
+            command: Command = Command(int(command_input))
         except ValueError:
             print("Некорректный ввод. Попробуйте снова.")
             continue
 
         if command == Command.ADD:
-            title = input("Введите название книги: ")
-            author = input("Введите автора книги: ")
-            year = int(input("Введите год издания: "))
+            title: str = input("Введите название книги: ")
+            author: str = input("Введите автора книги: ")
+            year: int = int(input("Введите год издания: "))
             library.add_book(title, author, year)
             print("Книга добавлена.")
 
         elif command == Command.REMOVE:
-            book_id = input("Введите ID книги для удаления: ")
+            book_id: str = input("Введите ID книги для удаления: ")
+            if book_id not in library.list_books_id():
+                print("Книги с таким ID не найдено")
+                continue
             library.remove_book(book_id)
             print("Книга удалена.")
 
         elif command == Command.FIND:
-            query = input("Введите запрос для поиска (название, автор, год): ")
-            found_books = library.find_books(query)
+            query: str = input(
+                "Введите запрос для поиска (название, автор, год): "
+            )
+            found_books: list[Book] = library.find_books(query)
+            if not found_books:
+                print(f"Книги по запросу '{query}' не найдены")
             for book in found_books:
-                print(f"{book.id} - {book.title}, {book.author}, {book.year}, {book.status}")
+                print(
+                    f"ID книги: {book.book_id}\n"
+                    f"Название: {book.title}\n"
+                    f"Автор: {book.author}\n"
+                    f"Год издания: {book.year}\n"
+                    f"Статус книги: {book.status}\n"
+                )
 
         elif command == Command.LIST:
             for book in library.list_books():
-                print(f"{book.id} - {book.title}, {book.author}, {book.year}, {book.status}")
+                print(
+                    f"ID книги: {book.book_id}\n"
+                    f"Название: {book.title}\n"
+                    f"Автор: {book.author}\n"
+                    f"Год издания: {book.year}\n"
+                    f"Статус книги: {book.status}\n"
+                )
 
         elif command == Command.UPDATE:
             book_id = input("Введите ID книги для изменения статуса: ")
-            status = input("Введите новый статус (в наличии, выдана): ")
+            if book_id not in library.list_books_id():
+                print("Книги с таким ID не найдено")
+                continue
+            print("\nДоступные статусы:")
+            BookStatus.print_commands()
+            status_input = input("Введите номер статуса: ").strip()
+
+            try:
+                status: BookStatus = BookStatus(int(status_input))
+            except ValueError:
+                print("Некорректный ввод. Попробуйте снова.")
+                continue
             library.update_status(book_id, status)
             print("Статус книги обновлен.")
 
@@ -48,6 +80,7 @@ def main():
 
         else:
             print("Неизвестная команда. Попробуйте снова.")
+
 
 if __name__ == "__main__":
     main()
