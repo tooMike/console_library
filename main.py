@@ -1,4 +1,4 @@
-from typing import List
+from datetime import datetime
 
 from constants import BookStatus, Command
 from models import Book, Library
@@ -21,6 +21,9 @@ def main():
             title: str = input("Введите название книги: ")
             author: str = input("Введите автора книги: ")
             year: int = int(input("Введите год издания: "))
+            if year > datetime.now().year:
+                print("Год издания книги не может быть в будущем")
+                continue
             library.add_book(title, author, year)
             print("Книга добавлена.")
 

@@ -1,9 +1,9 @@
 import json
-from typing import List
 
 from constants import BookStatus
 from models import Book, Library
 
+# Файл с данными для тестов
 filepath = 'test_app.json'
 
 # Очищаем файл с тестовыми данными
@@ -62,8 +62,8 @@ def test_update_book_status():
 
 def test_find_book_by_title():
     """Проверка поиска книги по названию."""
-    # Добавляем еще 1 книги в библиотеку
-    add_new_book(
+    # Добавляем еще 1 книгу в библиотеку
+    new_book: dict[str: str | int] = add_new_book(
         title="The Hitchhiker's Guide to the Galaxy",
         author='Douglas Noel Adams',
         year=1978
@@ -72,9 +72,9 @@ def test_find_book_by_title():
     if all(
             [
                 len(find_book) == 1,
-                find_book[0].title == "The Hitchhiker's Guide to the Galaxy",
-                find_book[0].author == "Douglas Noel Adams",
-                find_book[0].year == 1978
+                find_book[0].title == new_book["title"],
+                find_book[0].author == new_book["author"],
+                find_book[0].year == new_book["year"]
             ]
     ):
         print("ПРОЙДЕН")

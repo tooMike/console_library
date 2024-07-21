@@ -1,5 +1,6 @@
 import json
 import uuid
+from datetime import datetime
 
 from constants import BookStatus
 
@@ -63,14 +64,19 @@ class Library:
 
     def add_book(self, title: str, author: str, year: int) -> None:
         """Добавление книги."""
+        if year > datetime.now().year:
+            raise ValueError("Год издания книги не может быть в будущем")
         new_book: Book = Book(title=title, author=author, year=year)
         self.books[new_book.book_id] = new_book
         self.save_books()
 
     def remove_book(self, book_id) -> None:
         """Удаление книги."""
-        self.books.pop(book_id)
-        self.save_books()
+        if book_id in self.books:
+            self.books.pop(book_id)
+            self.save_books()
+        else:
+            raise KeyError(f"Книга с ID {book_id} не найдена.")
 
     def find_books(self, search_query: str) -> list[Book]:
         """Поиск книги по автору, названию или году."""
@@ -94,4 +100,7 @@ class Library:
             new_status: str = "Выдана" if status == BookStatus.ISSUED \
                 else "В наличии"
             self.books[book_id].status = new_status
-        self.save_books()
+            self.save_books()
+        else:
+            raise KeyError(f"Книга с ID {book_id} не найдена.")
+
